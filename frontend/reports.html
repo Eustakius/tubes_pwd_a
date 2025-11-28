@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Incident Reports - Cyber Report RMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color:#f3f4f6; }
+    .rms-card { border-radius:6px; box-shadow:0 0.5rem 1rem rgba(15,23,42,.12); }
+    .badge-status { text-transform:uppercase; font-size:0.75rem; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color:#111827;">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Cyber Incident Reporting RMS</a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="reports.html">Reports</a></li>
+        <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
+      </ul>
+      <button id="btnLogout" class="btn btn-outline-light btn-sm">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-4">
+  <div id="alert" class="alert d-none" role="alert"></div>
+
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card rms-card">
+        <div class="card-body">
+          <h5 class="card-title mb-3">New / Edit Report</h5>
+
+          <form id="reportForm">
+            <input type="hidden" id="reportId">
+
+            <div class="mb-3">
+              <label class="form-label" for="title">Title</label>
+              <input type="text" id="title" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="description">Description</label>
+              <textarea id="description" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="location">Location</label>
+              <div class="input-group">
+                <input type="text" id="location" class="form-control" placeholder="Lat,Lng or address">
+                <button type="button" id="btnGeo" class="btn btn-outline-secondary">Use Current Location</button>
+              </div>
+              <div class="form-text">Example: 40.712776,-74.005974</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-2">Save Report</button>
+            <button type="button" id="btnCancelEdit" class="btn btn-secondary w-100 d-none">Cancel Edit</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card rms-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">My Incident Reports</h5>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle mb-0">
+              <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Location</th>
+                <th>Created</th>
+                <th style="width:140px;">Actions</th>
+              </tr>
+              </thead>
+              <tbody id="reportsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE   = '../backend';
+const alertBox   = document.getElementById('alert');
+const reportsBody = document.getElementById('reportsBody');
+
+function showAlert(msg, type='success') {
+  alertBox.className = 'alert alert-' + type;
+  alertBox.textContent = msg;
+  alertBox.classList.remove('d-none');
+}
+
+// check auth then load
+fetch(`${API_BASE}/me.php`, { credentials: 'include' })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.authenticated) {
+      window.location.href = 'login.html';
+    } else {
+      loadReports();
+    }
+  });
+
+function statusColor(status) {
+  switch (status) {
+    case 'open': return 'warning';
+    case 'progress': return 'info';
+    case 'closed': return 'success';
+    default: return 'secondary';
+  }
+}
+
+function loadReports() {
+  fetch(`${API_BASE}/crud_reports.php`, { credentials: 'include' })
+    .then(r => r.json())
+    .then(d => {
+      reportsBody.innerHTML = '';
+      if (d.success && Array.isArray(d.data)) {
+        d.data.forEach((rep, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${rep.title}</td>
+            <td><span class="badge bg-${statusColor(rep.status)} badge-status">${rep.status}</span></td>
+            <td>${rep.location || '-'}</td>
+            <td>${rep.created_at}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary me-1" onclick="editReport(${rep.id})">Edit</button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteReport(${rep.id})">Delete</button>
+            </td>
+          `;
+          reportsBody.appendChild(tr);
+        });
+      }
+    });
+}
+
+// create/update
+document.getElementById('reportForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const id = document.getElementById('reportId').value;
+  const payload = {
+    title: document.getElementById('title').value.trim(),
+    description: document.getElementById('description').value.trim(),
+    location: document.getElementById('location').value.trim()
+  };
+
+  if (!payload.title) {
+    showAlert('Title is required', 'danger');
+    return;
+  }
+
+  if (!id) {
+    // create
+    fetch(`${API_BASE}/crud_reports.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          showAlert(d.message || 'Report created');
+          this.reset();
+          loadReports();
+        } else {
+          showAlert(d.message || 'Failed to create report', 'danger');
+        }
+      });
+  } else {
+    // update
+    fetch(`${API_BASE}/crud_reports.php?id=${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          showAlert(d.message || 'Report updated');
+          this.reset();
+          document.getElementById('reportId').value = '';
+          document.getElementById('btnCancelEdit').classList.add('d-none');
+          loadReports();
+        } else {
+          showAlert(d.message || 'Failed to update report', 'danger');
+        }
+      });
+  }
+});
+
+document.getElementById('btnCancelEdit').addEventListener('click', () => {
+  document.getElementById('reportForm').reset();
+  document.getElementById('reportId').value = '';
+  document.getElementById('btnCancelEdit').classList.add('d-none');
+});
+
+window.editReport = function (id) {
+  fetch(`${API_BASE}/crud_reports.php?id=${id}`, { credentials:'include' })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success && d.data) {
+        const rep = d.data;
+        document.getElementById('reportId').value = rep.id;
+        document.getElementById('title').value = rep.title;
+        document.getElementById('description').value = rep.description;
+        document.getElementById('location').value = rep.location || '';
+        document.getElementById('btnCancelEdit').classList.remove('d-none');
+        window.scrollTo({ top:0, behavior:'smooth' });
+      }
+    });
+};
+
+window.deleteReport = function (id) {
+  if (!confirm('Delete this report?')) return;
+
+  fetch(`${API_BASE}/crud_reports.php?id=${id}`, {
+    method:'DELETE',
+    credentials:'include'
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        showAlert(d.message || 'Report deleted');
+        loadReports();
+      } else {
+        showAlert(d.message || 'Failed to delete', 'danger');
+      }
+    });
+};
+
+document.getElementById('btnLogout').addEventListener('click', () => {
+  fetch(`${API_BASE}/logout.php`, { credentials:'include' })
+    .then(() => window.location.href = 'login.html');
+});
+
+// geolocation
+document.getElementById('btnGeo').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    showAlert('Geolocation is not supported by this browser', 'danger');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      document.getElementById('location').value = `${lat},${lng}`;
+    },
+    err => {
+      showAlert('Unable to retrieve location: ' + err.message, 'danger');
+    }
+  );
+});
+</script>
+</body>
+</html>

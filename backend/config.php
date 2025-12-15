@@ -3,8 +3,8 @@ session_start();
 
 // === KONFIGURASI DATABASE ===
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');  // XAMPP default
+define('DB_USER', 'admin');
+define('DB_PASS', '123');  // XAMPP default
 define('DB_NAME', 'reporting_system');
 
 try {
@@ -30,16 +30,16 @@ function sendActivationEmail($email, $username, $token)
 
     try {
         // Debug ke php_error_log
-        $mail->SMTPDebug   = SMTP::DEBUG_SERVER;
+        $mail->SMTPDebug = SMTP::DEBUG_SERVER;
         $mail->Debugoutput = 'error_log';
 
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'tsukishiroyuto@gmail.com';
-        $mail->Password   = 'APP_PASSWORD_16_DIGIT'; // GANTI
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'tsukishiroyuto@gmail.com';
+        $mail->Password = '';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
+        $mail->Port = 587;
 
         $mail->setFrom('tsukishiroyuto@gmail.com', 'Cyber Report System');
         $mail->addAddress($email, $username);
@@ -48,7 +48,7 @@ function sendActivationEmail($email, $username, $token)
 
         $mail->isHTML(true);
         $mail->Subject = 'Aktivasi Akun Cyber Report';
-        $mail->Body    = "
+        $mail->Body = "
             <h2>Selamat datang, {$username}!</h2>
             <p>Klik link berikut untuk mengaktifkan akun:</p>
             <a href='{$activation_link}' style=\"background:#0d6efd;color:#fff;padding:10px 20px;text-decoration:none;border-radius:4px;\">AKTIVASI AKUN</a>

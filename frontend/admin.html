@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Cyber Report RMS</title>
+    <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container d-flex align-center justify-between">
+            <span class="nav-brand">Administrator Panel</span>
+            <div class="d-flex align-center gap-2">
+                <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mb-4">
+        <div id="alert" class="alert d-none" role="alert"></div>
+
+        <!-- DASHBOARD LAYOUT (Asymmetric) -->
+        <div class="dashboard-layout">
+
+            <!-- LEFT COLUMN: Status & Filters -->
+            <div>
+                <div class="card">
+                    <h3 class="mb-4" style="font-size: 1.25rem;">Admin Controls</h3>
+                    <p class="text-muted mb-4" style="font-size: 0.9rem;">System Overview</p>
+
+                    <!-- Export ALL -->
+                    <button onclick="window.open('../backend/export_pdf.php', '_blank')"
+                        class="btn btn-secondary w-100 mb-4">
+                        📄 Export All Reports (PDF)
+                    </button>
+
+                    <!-- Stats -->
+                    <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom: 2rem;">
+                        <div
+                            style="padding:0.75rem; background:rgba(255,255,255,0.05); border-radius:6px; border-left: 3px solid #f59e0b;">
+                            <div style="font-size:0.8rem; color:#aaa;">Open</div>
+                            <div id="statOpen" style="font-size:1.2rem; font-weight:bold;">-</div>
+                        </div>
+                        <div
+                            style="padding:0.75rem; background:rgba(255,255,255,0.05); border-radius:6px; border-left: 3px solid #3b82f6;">
+                            <div style="font-size:0.8rem; color:#aaa;">In Progress</div>
+                            <div id="statProgress" style="font-size:1.2rem; font-weight:bold;">-</div>
+                        </div>
+                        <div
+                            style="padding:0.75rem; background:rgba(255,255,255,0.05); border-radius:6px; border-left: 3px solid #10b981;">
+                            <div style="font-size:0.8rem; color:#aaa;">Closed</div>
+                            <div id="statClosed" style="font-size:1.2rem; font-weight:bold;">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Filter -->
+                    <div>
+                        <label class="form-label" style="font-size:0.9rem;">Filter Status</label>
+                        <select id="statusFilter" class="form-control" onchange="loadAllReports()">
+                            <option value="all">All Status</option>
+                            <option value="open">Open</option>
+                            <option value="progress">In Progress</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Table List -->
+            <div>
+                <div class="card">
+                    <div class="d-flex justify-between align-center mb-4">
+                        <h3 style="font-size: 1.25rem;">Incoming Reports</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="loadAllReports()">Refresh List</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Reporter</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminReportsBody">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Discussion Modal -->
+    <div id="discussModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Discussion</div>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+
+            <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <!-- Chat Header Controls -->
+                <div
+                    style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span class="text-muted" style="font-size:0.9rem; margin-right:0.5rem;">Status:</span>
+                        <select id="updateStatusSelect"
+                            style="padding:0.3rem; border-radius:4px; border:1px solid var(--border); background:var(--bg); color:var(--text);">
+                            <option value="open">Open</option>
+                            <option value="progress">In Progress</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                        <button id="btnUpdateStatus" class="btn btn-primary btn-sm"
+                            style="margin-left:0.5rem;">Update</button>
+                    </div>
+                    <div>
+                        <a id="btnPdfSingle" href="#" target="_blank" class="btn btn-secondary btn-sm">🖨️ PDF</a>
+                    </div>
+                </div>
+
+                <!-- Chat Area -->
+                <div id="chatContainer" class="chat-container"
+                    style="flex: 1; overflow-y: auto; padding-right: 0.5rem; margin-bottom: 1rem;">
+                    <!-- Messages -->
+                </div>
+
+                <!-- Input Area -->
+                <form id="commentForm">
+                    <input type="hidden" id="chatReportId">
+
+                    <div style="display:flex; gap:0.5rem;">
+                        <input type="text" id="commentInput" class="form-control" placeholder="Reply as Admin..."
+                            autocomplete="off" style="flex:1;">
+                        <button type="submit" id="btnSendChat" class="btn btn-primary">Send</button>
+                    </div>
+
+                    <div style="display:flex; align-items:center; margin-top:0.5rem; justify-content:space-between;">
+                        <div>
+                            <input type="file" id="chatAttachment" class="form-control"
+                                style="width: auto; padding:0.2rem; font-size:0.8rem;">
+                        </div>
+                        <div id="uploadProgress" class="d-none"
+                            style="width: 150px; display:flex; align-items:center; gap:0.5rem;">
+                            <div class="progress" style="width:100px; height:6px;">
+                                <div id="progressBar" class="progress-bar bg-info" style="width:0%"></div>
+                            </div>
+                            <small style="font-size:0.7rem;">Uploading...</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '../backend';
+        const alertBox = document.getElementById('alert');
+        const adminReportsBody = document.getElementById('adminReportsBody');
+        let currentUser = null;
+        let pollInterval = null;
+
+        function showAlert(msg, type = 'success') {
+            alertBox.className = `alert alert-${type}`;
+            alertBox.textContent = msg;
+            alertBox.classList.remove('d-none');
+            setTimeout(() => alertBox.classList.add('d-none'), 3000);
+        }
+
+        function logout() {
+            fetch(`${API_BASE}/logout.php`)
+                .then(() => window.location.href = 'login.html');
+        }
+
+        // --- AUTH & LOAD ---
+        fetch(`${API_BASE}/me.php`, { credentials: 'include' })
+            .then(r => r.json())
+            .then(d => {
+                if (!d.authenticated || d.data.role !== 'admin') {
+                    window.location.href = 'login.html';
+                } else {
+                    currentUser = d.data;
+                    loadAllReports();
+                    loadStats();
+                }
+            })
+            .catch(() => window.location.href = 'login.html');
+
+        function statusColor(s) {
+            if (s === 'open') return 'warning';
+            if (s === 'progress') return 'info';
+            if (s === 'closed') return 'success';
+            return 'secondary';
+        }
+
+        function getPriorityBadge(p) {
+            if (p === 'Critical') return 'badge-danger';
+            if (p === 'High') return 'badge-warning';
+            if (p === 'Medium') return 'badge-info';
+            return 'badge-secondary';
+        }
+
+        function loadStats() {
+            // Re-use admin_reports with status filter or separate endpoint.
+            // For now, let's just count from the 'all' fetch if possible, 
+            // OR fetch each. For strictness, let's assume we fetch all and count in JS for simplicity unless huge.
+            fetch(`${API_BASE}/admin_reports.php?status=all`, { credentials: 'include' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success && d.data) {
+                        const open = d.data.filter(r => r.status === 'open').length;
+                        const progress = d.data.filter(r => r.status === 'progress').length;
+                        const closed = d.data.filter(r => r.status === 'closed').length;
+                        document.getElementById('statOpen').innerText = open;
+                        document.getElementById('statProgress').innerText = progress;
+                        document.getElementById('statClosed').innerText = closed;
+                    }
+                });
+        }
+
+        function loadAllReports() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            adminReportsBody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
+
+            fetch(`${API_BASE}/admin_reports.php?status=${statusFilter}`, { credentials: 'include' })
+                .then(r => r.json())
+                .then(d => {
+                    adminReportsBody.innerHTML = '';
+                    if (d.success && Array.isArray(d.data)) {
+                        if (d.data.length === 0) {
+                            adminReportsBody.innerHTML = '<tr><td colspan="8" class="text-center p-4">No reports found.</td></tr>';
+                            return;
+                        }
+                        d.data.forEach((rep, idx) => {
+                            const evidenceLink = rep.evidence
+                                ? `<a href="../backend/uploads/${rep.evidence}" target="_blank" style="text-decoration: underline;">Link</a>`
+                                : '-';
+
+                            let badge = '';
+                            if (rep.last_reply_by === 'user') {
+                                badge = `<span style="position:absolute; top:-5px; right:-5px; width:10px; height:10px; background:red; border-radius:50%; border:2px solid white;"></span>`;
+                            }
+
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                           <td>${idx + 1}</td>
+                           <td>
+                              <div style="font-weight:500;">${rep.username}</div>
+                              <small class="text-muted" style="font-size:0.75rem;">${rep.email}</small>
+                           </td>
+                           <td style="font-weight:600; color:var(--primary);">${rep.title}</td>
+                           <td>${rep.category || '-'}</td>
+                           <td><span class="badge ${getPriorityBadge(rep.priority)}">${rep.priority || 'Low'}</span></td>
+                           <td><span class="badge badge-${statusColor(rep.status)}">${rep.status}</span></td>
+                           <td style="font-size:0.85rem; color: #888;">${rep.created_at.substring(0, 16)}</td>
+                           <td>
+                               <div class="d-flex gap-2">
+                                 <button class="btn btn-primary btn-sm" onclick="openDiscussion(${rep.id}, '${rep.title.replace(/'/g, "\\'")}', '${rep.status}')" style="position:relative;">Chat ${badge}</button>
+                                <a href="../backend/export_pdf.php?id=${rep.id}" target="_blank" class="btn btn-secondary btn-sm" title="Download PDF">🖨️</a>
+                              </div>
+                           </td>
+                         `;
+                            adminReportsBody.appendChild(tr);
+                        });
+                    } else {
+                        adminReportsBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load reports.</td></tr>';
+                    }
+                });
+        }
+
+        // --- CHAT LOGIC ---
+        const discussModal = document.getElementById('discussModal');
+        const chatContainer = document.getElementById('chatContainer');
+        const commentInput = document.getElementById('commentInput');
+
+        function openDiscussion(reportId, title, status) {
+            document.querySelector('.modal-title').textContent = 'Admin Chat: ' + title;
+            document.getElementById('chatReportId').value = reportId;
+            document.getElementById('updateStatusSelect').value = status;
+            document.getElementById('btnPdfSingle').href = `../backend/export_pdf.php?id=${reportId}`;
+
+            // UI Reset
+            commentInput.value = '';
+            document.getElementById('chatAttachment').value = '';
+            document.getElementById('uploadProgress').classList.add('d-none');
+
+            discussModal.classList.add('active');
+
+            // Initial Load
+            chatContainer.innerHTML = '<div class="text-center text-muted">Loading...</div>';
+            loadComments(reportId);
+
+            // Polling
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(() => {
+                if (discussModal.classList.contains('active')) {
+                    loadComments(reportId, true);
+                }
+            }, 3000);
+        }
+
+        function closeModal() {
+            discussModal.classList.remove('active');
+            if (pollInterval) clearInterval(pollInterval);
+            loadAllReports(); // Refresh table to update read badges
+            loadStats();
+        }
+
+        function renderComment(c) {
+            const isSelf = (c.user_id == currentUser.id);
+            let mediaContent = '';
+            if (c.attachment) {
+                const ext = c.attachment.split('.').pop().toLowerCase();
+                if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+                    mediaContent = `<div style="margin-top:5px;"><a href="../backend/uploads/${c.attachment}" target="_blank"><img src="../backend/uploads/${c.attachment}" style="max-width:200px; border-radius:4px;"></a></div>`;
+                } else if (['mp4', 'webm'].includes(ext)) {
+                    mediaContent = `<div style="margin-top:5px;"><video src="../backend/uploads/${c.attachment}" controls style="max-width:200px; border-radius:4px;"></video></div>`;
+                } else {
+                    mediaContent = `<div style="margin-top:5px;"><a href="../backend/uploads/${c.attachment}" target="_blank" class="btn btn-sm btn-secondary">Download File</a></div>`;
+                }
+            }
+
+            const senderName = isSelf ? 'Status Admin (You)' : (c.role === 'admin' ? `Admin (${c.username})` : c.username);
+
+            return `
+            <div class="chat-message ${isSelf ? 'self' : ''}">
+                <div style="display:flex; flex-direction:column; align-items: ${isSelf ? 'flex-end' : 'flex-start'}; max-width: 100%;">
+                    <div class="chat-bubble">
+                        ${c.message || ''}
+                        ${mediaContent}
+                    </div>
+                    <div class="chat-meta">
+                        ${senderName} • ${c.created_at.substring(11, 16)}
+                    </div>
+                </div>
+            </div>
+           `;
+        }
+
+        function loadComments(reportId, silent = false) {
+            fetch(`${API_BASE}/crud_comments.php?report_id=${reportId}`, { credentials: 'include' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success && d.data) {
+                        const wasAtBottom = (chatContainer.scrollHeight - chatContainer.scrollTop === chatContainer.clientHeight);
+
+                        let html = '';
+                        if (d.data.length === 0) {
+                            html = '<div class="text-center text-muted mt-4">No comments yet.</div>';
+                        } else {
+                            d.data.forEach(c => html += renderComment(c));
+                        }
+
+                        // If silent, only update if content changed? 
+                        // For now just replace. innerHTML is fast enough for text.
+                        chatContainer.innerHTML = html;
+
+                        if (!silent || wasAtBottom) {
+                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                        }
+                    }
+                });
+        }
+
+        // UPDATE STATUS
+        document.getElementById('btnUpdateStatus').addEventListener('click', () => {
+            const rid = document.getElementById('chatReportId').value;
+            const status = document.getElementById('updateStatusSelect').value;
+
+            fetch(`${API_BASE}/admin_update_status.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ id: rid, status: status })
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        showAlert('Status Updated');
+                        if (document.getElementById('statusFilter').value !== 'all') {
+                            // If filtering by specific status, this report might disappear from list.
+                            // But we want to stay in chat.
+                        }
+                    } else {
+                        showAlert('Failed: ' + d.message, 'danger');
+                    }
+                });
+        });
+
+        // SEND CHAT (XHR)
+        document.getElementById('commentForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const msg = commentInput.value.trim();
+            const fileInput = document.getElementById('chatAttachment');
+            const rid = document.getElementById('chatReportId').value;
+            const btnSend = document.getElementById('btnSendChat');
+            const progressContainer = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('progressBar');
+
+            if (!rid) { showAlert('Error: ID Missing', 'danger'); return; }
+            // Allow empty msg if file
+            if (!msg && !fileInput.files[0]) { showAlert('Write a message!', 'danger'); return; }
+            if (fileInput.files[0] && fileInput.files[0].size > 2 * 1024 * 1024) { showAlert('File > 2MB', 'danger'); return; }
+
+            const formData = new FormData();
+            formData.append('report_id', rid);
+            formData.append('message', msg);
+            if (fileInput.files[0]) formData.append('attachment', fileInput.files[0]);
+
+            btnSend.disabled = true;
+            btnSend.textContent = '...';
+            progressContainer.classList.remove('d-none');
+            progressBar.style.width = '0%';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${API_BASE}/crud_comments.php`, true);
+            xhr.withCredentials = true;
+
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) {
+                    progressBar.style.width = (e.loaded / e.total * 100) + '%';
+                }
+            };
+
+            xhr.onload = () => {
+                btnSend.disabled = false;
+                btnSend.textContent = 'Send';
+                progressContainer.classList.add('d-none');
+                if (xhr.status === 200) {
+                    try {
+                        const d = JSON.parse(xhr.responseText);
+                        if (d.success) {
+                            commentInput.value = '';
+                            fileInput.value = '';
+                            // Instant Append
+                            if (d.comment) {
+                                if (chatContainer.innerHTML.includes('No comments')) chatContainer.innerHTML = '';
+                                chatContainer.innerHTML += renderComment(d.comment);
+                                chatContainer.scrollTop = chatContainer.scrollHeight;
+                            } else {
+                                loadComments(rid);
+                            }
+                        } else {
+                            showAlert(d.message, 'danger');
+                        }
+                    } catch (e) { showAlert('Server Error', 'danger'); }
+                } else {
+                    showAlert('Upload Failed', 'danger');
+                }
+            };
+
+            xhr.onerror = () => {
+                btnSend.disabled = false;
+                btnSend.textContent = 'Send';
+                progressContainer.classList.add('d-none');
+                showAlert('Network Error', 'danger');
+            };
+
+            xhr.send(formData);
+        });
+    </script>
+</body>
+
+</html>

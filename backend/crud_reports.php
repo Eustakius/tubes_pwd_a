@@ -1,6 +1,12 @@
 <?php
 require_once 'config.php';
 
+// Prevent unwanted output
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
+ini_set('display_errors', 0);
+
+header('Content-Type: application/json');
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if (!isset($_SESSION['user_id'])) {
@@ -13,25 +19,67 @@ $userId = $_SESSION['user_id'];
 
 switch ($method) {
     case 'POST':
-        $input       = json_decode(file_get_contents('php://input'), true);
-        $title       = trim($input['title'] ?? '');
-        $description = trim($input['description'] ?? '');
-        $location    = trim($input['location'] ?? '');
+        // Handle both JSON and Multipart/Form-Data
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        if (stripos($contentType, 'application/json') !== false) {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $title = trim($input['title'] ?? '');
+            $description = trim($input['description'] ?? '');
+            $location = trim($input['location'] ?? '');
+            $latitude = $input['latitude'] ?? null;
+            $longitude = $input['longitude'] ?? null;
+            $category = trim($input['category'] ?? 'Other'); // Added
+            $priority = trim($input['priority'] ?? 'Low');   // Added
+        } else {
+            $title = trim($_POST['title'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $location = trim($_POST['location'] ?? '');
+            $latitude = $_POST['latitude'] ?? null;
+            $longitude = $_POST['longitude'] ?? null;
+            $category = trim($_POST['category'] ?? 'Other'); // Added
+            $priority = trim($_POST['priority'] ?? 'Low');   // Added
+        }
 
-        if (empty($title)) {
+        if (empty($title) || empty($description)) { // Modified validation
             http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Judul laporan wajib diisi']);
+            echo json_encode(['success' => false, 'message' => 'Judul dan Deskripsi wajib diisi']);
             exit;
         }
 
-        $stmt = $pdo->prepare(
-            "INSERT INTO reports (user_id, title, description, location) VALUES (?, ?, ?, ?)"
-        );
-        if ($stmt->execute([$userId, $title, $description, $location])) {
+        // Handle Evidence Upload
+        $evidencePath = null;
+        if (isset($_FILES['evidence']) && $_FILES['evidence']['error'] === UPLOAD_ERR_OK) {
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+            $fileType = mime_content_type($_FILES['evidence']['tmp_name']);
+
+            if (in_array($fileType, $allowedTypes)) {
+                $ext = pathinfo($_FILES['evidence']['name'], PATHINFO_EXTENSION);
+                $filename = 'evidence_' . time() . '_' . uniqid() . '.' . $ext;
+                $targetDir = __DIR__ . '/uploads/';
+
+                if (!is_dir($targetDir)) {
+                    mkdir($targetDir, 0755, true);
+                }
+
+                if (move_uploaded_file($_FILES['evidence']['tmp_name'], $targetDir . $filename)) {
+                    $evidencePath = $filename;
+                }
+            } else { // Added invalid file type check
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Invalid file type. Only Images/PDF allowed.']);
+                exit;
+            }
+        }
+
+        try {
+            $stmt = $pdo->prepare(
+                "INSERT INTO reports (user_id, title, description, location, latitude, longitude, evidence, category, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+            $stmt->execute([$userId, $title, $description, $location, $latitude, $longitude, $evidencePath, $category, $priority]);
             echo json_encode(['success' => true, 'message' => 'Laporan berhasil dibuat']);
-        } else {
+        } catch (PDOException $e) {
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Gagal membuat laporan']);
+            echo json_encode(['success' => false, 'message' => 'Database Error: ' . $e->getMessage()]);
         }
         break;
 
@@ -70,10 +118,10 @@ switch ($method) {
             exit;
         }
 
-        $input       = json_decode(file_get_contents('php://input'), true);
-        $title       = trim($input['title'] ?? '');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $title = trim($input['title'] ?? '');
         $description = trim($input['description'] ?? '');
-        $status      = trim($input['status'] ?? '');
+        $status = trim($input['status'] ?? '');
 
         $allowedStatus = ['open', 'progress', 'closed'];
         if ($status !== '' && !in_array($status, $allowedStatus, true)) {
@@ -82,8 +130,8 @@ switch ($method) {
             exit;
         }
 
-        $stmt = $pdo->prepare("SELECT * FROM reports WHERE id = ? AND user_id = ?");
-        $stmt->execute([$id, $userId]);
+        $stmt = $pdo->prepare("SELECT * FROM reports WHERE id = ?");
+        $stmt->execute([$id]);
         $report = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$report) {
@@ -92,18 +140,45 @@ switch ($method) {
             exit;
         }
 
-        $newTitle       = $title !== '' ? $title : $report['title'];
-        $newDescription = $description !== '' ? $description : $report['description'];
-        $newStatus      = $status !== '' ? $status : $report['status'];
+        // Check permission: Owner OR Admin
+        $role = $_SESSION['role'] ?? 'user';
+        if ($role !== 'admin' && $report['user_id'] != $userId) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Forbidden']);
+            exit;
+        }
 
-        $stmt = $pdo->prepare(
-            "UPDATE reports SET title = ?, description = ?, status = ? WHERE id = ? AND user_id = ?"
-        );
-        if ($stmt->execute([$newTitle, $newDescription, $newStatus, $id, $userId])) {
+        // QoL: User cannot edit if closed
+        if ($role !== 'admin' && $report['status'] === 'closed') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Cannot edit a closed ticket']);
+            exit;
+        }
+
+        $newTitle = $title !== '' ? $title : $report['title'];
+        $newDescription = $description !== '' ? $description : $report['description'];
+        $newStatus = $status !== '' ? $status : $report['status'];
+        // Assume category/priority might be passed in PUT body
+        $newCategory = $input['category'] ?? $report['category'];
+        $newPriority = $input['priority'] ?? $report['priority'];
+
+        try {
+            // If admin, they can update any report. If user, only theirs.
+            if ($role === 'admin') {
+                $stmt = $pdo->prepare(
+                    "UPDATE reports SET title = ?, description = ?, status = ?, category = ?, priority = ? WHERE id = ?"
+                );
+                $stmt->execute([$newTitle, $newDescription, $newStatus, $newCategory, $newPriority, $id]);
+            } else {
+                $stmt = $pdo->prepare(
+                    "UPDATE reports SET title = ?, description = ?, status = ?, category = ?, priority = ? WHERE id = ? AND user_id = ?"
+                );
+                $stmt->execute([$newTitle, $newDescription, $newStatus, $newCategory, $newPriority, $id, $userId]);
+            }
             echo json_encode(['success' => true, 'message' => 'Laporan berhasil diupdate']);
-        } else {
+        } catch (PDOException $e) {
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Gagal mengupdate laporan']);
+            echo json_encode(['success' => false, 'message' => 'Update Failed: ' . $e->getMessage()]);
         }
         break;
 
@@ -117,10 +192,35 @@ switch ($method) {
             exit;
         }
 
+        $stmt = $pdo->prepare("SELECT * FROM reports WHERE id = ?");
+        $stmt->execute([$id]);
+        $report = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$report) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Laporan tidak ditemukan']);
+            exit;
+        }
+
+        // Check permission & Status
+        $role = $_SESSION['role'] ?? 'user';
+        if ($role !== 'admin') {
+            if ($report['user_id'] != $userId) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Forbidden']);
+                exit;
+            }
+            if ($report['status'] === 'closed') {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Cannot delete a closed ticket']);
+                exit;
+            }
+        }
+
         $stmt = $pdo->prepare(
-            "DELETE FROM reports WHERE id = ? AND user_id = ?"
+            "DELETE FROM reports WHERE id = ?"
         );
-        if ($stmt->execute([$id, $userId]) && $stmt->rowCount() > 0) {
+        if ($stmt->execute([$id]) && $stmt->rowCount() > 0) {
             echo json_encode(['success' => true, 'message' => 'Laporan berhasil dihapus']);
         } else {
             http_response_code(404);

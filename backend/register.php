@@ -4,9 +4,9 @@ require_once 'config.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'POST') {
-    $input    = json_decode(file_get_contents('php://input'), true);
+    $input = json_decode(file_get_contents('php://input'), true);
     $username = trim($input['username'] ?? '');
-    $email    = trim($input['email'] ?? '');
+    $email = trim($input['email'] ?? '');
     $password = $input['password'] ?? '';
 
     if (empty($username) || empty($email) || empty($password)) {
@@ -36,9 +36,9 @@ if ($method === 'POST') {
     }
 
     $hashed_password = hash_password($password);
-    $token           = generate_token();
+    $token = generate_token();
 
-    $stmt = $pdo->prepare("INSERT INTO users (username, email, password, active) VALUES (?, ?, ?, 0)");
+    $stmt = $pdo->prepare("INSERT INTO users (username, email, password, active) VALUES (?, ?, ?, 1)");
 
     if ($stmt->execute([$username, $email, $hashed_password])) {
         if (sendActivationEmail($email, $username, $token)) {
@@ -60,22 +60,22 @@ if ($method === 'POST') {
 
 } elseif ($method === 'GET') {
     $username = $_GET['username'] ?? '';
-    $email    = $_GET['email'] ?? '';
+    $email = $_GET['email'] ?? '';
 
     $conditions = [];
-    $params     = [];
+    $params = [];
 
     if (!empty($username)) {
         $conditions[] = "username = ?";
-        $params[]     = $username;
+        $params[] = $username;
     }
     if (!empty($email)) {
         $conditions[] = "email = ?";
-        $params[]     = $email;
+        $params[] = $email;
     }
 
     if (!empty($conditions)) {
-        $sql  = "SELECT id FROM users WHERE " . implode(' OR ', $conditions);
+        $sql = "SELECT id FROM users WHERE " . implode(' OR ', $conditions);
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
 

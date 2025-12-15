@@ -10,9 +10,10 @@ if (!isset($_SESSION['user_id'])) {
 echo json_encode([
     'authenticated' => true,
     'data' => [
-        'id'          => $_SESSION['user_id'],
-        'username'    => $_SESSION['username'],
-        'email'       => $_SESSION['user_email'],
+        'id' => $_SESSION['user_id'],
+        'username' => $_SESSION['username'],
+        'email' => $_SESSION['user_email'],
+        'role' => $_SESSION['role'] ?? 'user', // Default to user if not set
         'profile_pic' => $_SESSION['profile_pic'] ?? 'default.jpg'
     ]
 ]);

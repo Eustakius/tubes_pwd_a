@@ -13,7 +13,6 @@ Aplikasi ini saat ini dikonfigurasi dan berjalan sepenuhnya pada lingkungan **Lo
 Apabila aplikasi ini hendak diunggah ke layanan hosting (Production), diperlukan beberapa penyesuaian konfigurasi, antara lain:
 1.  **Koneksi Database**: File `backend/config.php` harus disesuaikan dengan kredensial database server hosting.
 2.  **Base URL**: Path absolut atau routing mungkin perlu disesuaikan dengan struktur folder di hosting.
-3.  **Permissions**: Folder `backend/uploads/` memerlukan izin tulis (write permission/chmod 777 atau 755) agar fitur upload bukti dapat berjalan.
 
 ---
 
@@ -58,3 +57,4 @@ Dalam pengembangan sistem ini, saya menggunakan teknologi berikut:
 ---
 **Disusun Oleh:**
 Mahasiswa Universitas Atma Jaya Yogyakarta
+Eustakius Satu Rajawali Ku / 220711648

@@ -1,52 +1,60 @@
 # Sistem Pelaporan Insiden Siber (Cyber Incident Reporting System)
 **Universitas Atma Jaya Yogyakarta**
 
-Aplikasi berbasis web untuk pelaporan, pelacakan, dan penanganan insiden keamanan siber secara real-time.
+**Tugas Besar Pengembangan Web (PWD)**
+
+---
+
+## 📝 Tentang Proyek Ini
+Laporan proyek akhir ini disusun untuk memenuhi tugas mata kuliah Pengembangan Web di Universitas Atma Jaya Yogyakarta. Aplikasi ini dirancang sebagai sistem pelaporan insiden keamanan siber yang memungkinkan pelacakan, penanganan, dan dokumentasi insiden secara real-time dan terstruktur.
+
+## ⚠️ Catatan Implementasi (PENTING)
+Aplikasi ini saat ini dikonfigurasi dan berjalan sepenuhnya pada lingkungan **Localhost**.
+Apabila aplikasi ini hendak diunggah ke layanan hosting (Production), diperlukan beberapa penyesuaian konfigurasi, antara lain:
+1.  **Koneksi Database**: File `backend/config.php` harus disesuaikan dengan kredensial database server hosting.
+2.  **Base URL**: Path absolut atau routing mungkin perlu disesuaikan dengan struktur folder di hosting.
+3.  **Permissions**: Folder `backend/uploads/` memerlukan izin tulis (write permission/chmod 777 atau 755) agar fitur upload bukti dapat berjalan.
+
+---
 
 ## 📋 Fitur Utama
+Sebagai pengembang, saya telah mengimplementasikan fitur-fitur berikut untuk mendukung fungsionalitas sistem:
 
 ### 1. Panel Pengguna (User)
-- **Pelaporan Insiden**: Melaporkan insiden dengan Judul, Deskripsi, Kategori, Prioritas, dan Lokasi (Geo-tagging).
-- **Upload Bukti**: Mendukung unggah gambar dan file PDF sebagai bukti insiden.
-- **Real-time Chat**: Diskusi langsung dengan Admin terkait tiket yang dibuat, termasuk kirim lampiran file.
-- **Status Tracking**: Memantau status laporan (Open, In Progress, Closed).
+- **Pelaporan Insiden**: Pengguna dapat melaporkan insiden lengkap dengan Geo-tagging (Lokasi) dan kategori.
+- **Upload Bukti**: Mendukung unggah gambar sebagai bukti otentik insiden.
+- **Interaksi Real-time**: Fitur chat langsung dengan administrator untuk koordinasi penanganan tiket.
 
 ### 2. Panel Administrator
-- **Dashboard Eksekutif**: Tampilan grid asimetris yang modern dengan statistik real-time.
-- **Manajemen Laporan**: Filter laporan berdasarkan status, ubah status, dan hapus laporan.
-- **Export PDF Canggih**:
-  - **Laporan Ringkasan**: Unduh ringkasan eksekutif berisi statistik dan daftar insiden prioritas tinggi.
-  - **Laporan Detail**: Unduh detail per tiket lengkap dengan riwayat chat dan gambar bukti.
+- **Dashboard Eksekutif**: Tampilan visual asimetris yang menyajikan statistik insiden (Open, In Progress, Closed).
+- **Manajemen Tiket**: Kemampuan untuk memfilter, memantau, dan memperbarui status laporan.
+- **Fitur Ekspor PDF**:
+  - **Executive Summary**: Ringkasan statistik dan daftar insiden prioritas tinggi.
+  - **Detail Report**: Laporan mendalam per tiket termasuk riwayat diskusi (chat) dan lampiran.
 
-## 🛠️ Teknologi yang Digunakan
+## 🛠️ Teknologi Pengembangan
+Dalam pengembangan sistem ini, saya menggunakan teknologi berikut:
 - **Backend**: Native PHP 8.x
-- **Frontend**: HTML5, CSS3 (Modern Dashboard Layout), Vanilla JavaScript
+- **Frontend**: HTML5, CSS3 (Modern UI), JavaScript (Ajax/XHR)
 - **Database**: MariaDB / MySQL
-- **Dependencies**: FPDF (untuk generate PDF), PHPMailer
+- **Dependencies**: FPDF, PHPMailer
 
-## 🚀 Cara Instalasi
+## 🚀 Panduan Instalasi (Lokal)
 
 1. **Persiapan Database**
-   - Buat database baru bernama `reporting_system`.
-   - Import file `reporting_system_final.sql` ke dalam database tersebut.
+   - Buat database baru dengan nama `reporting_system`.
+   - Import file `reporting_system_final.sql` yang telah saya sertakan.
 
 2. **Konfigurasi**
-   - Buka file `backend/config.php`.
-   - Sesuaikan konfigurasi database (`DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`).
+   - Sesuaikan file `backend/config.php` dengan user/password database lokal Anda.
 
-3. **Jalankan Server**
-   Buka terminal di folder root project dan jalankan PHP built-in server:
+3. **Menjalankan Server**
+   Gunakan PHP built-in server pada folder root proyek:
    ```bash
    php -S localhost:8000
    ```
-   Atau letakkan folder ini di dalam `htdocs` jika menggunakan XAMPP/Apache.
+   Akses aplikasi melalui: `http://localhost:8000/frontend/login.html`
 
-4. **Akses Aplikasi**
-   - Buka browser dan akses: `http://localhost:8000/frontend/login.html`
-   - **Akun Admin Default**:
-     - Username: `admin`
-     - Password: `123` (atau sesuaikan dengan hash di database)
-
-## 📝 Catatan Pengembang
-Project ini dibuat sebagai Tugas Besar Pengembangan Web (PWD) di Universitas Atma Jaya Yogyakarta.
-Didesain dengan antarmuka yang responsif dan fitur keamanan standar (Prepared Statements, XSS Protection, Password Hashing).
+---
+**Disusun Oleh:**
+Mahasiswa Universitas Atma Jaya Yogyakarta

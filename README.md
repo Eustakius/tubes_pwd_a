@@ -6,14 +6,15 @@
 ---
 
 ## 📝 Tentang Proyek Ini
-Laporan proyek akhir ini disusun untuk memenuhi tugas mata kuliah Pengembangan Web di Universitas Atma Jaya Yogyakarta. Aplikasi ini dirancang sebagai sistem pelaporan insiden keamanan siber yang memungkinkan pelacakan, penanganan, dan dokumentasi insiden secara real-time dan terstruktur.
+Laporan proyek akhir ini disusun untuk memenuhi tugas mata kuliah Pengembangan Web di Universitas Atma Jaya Yogyakarta. Aplikasi ini dirancang secara khusus sebagai sistem pelaporan insiden keamanan siber yang komprehensif. Sistem ini memungkinkan organisasi untuk melakukan pelacakan, penanganan, dan dokumentasi insiden keamanan secara real-time, terstruktur, dan akuntabel. Dengan antarmuka yang modern dan responsif, aplikasi ini memfasilitasi komunikasi yang efisien antara pelapor (user) dan tim keamanan (admin).
 
 ## ⚠️ Catatan Implementasi (PENTING)
 Aplikasi ini saat ini dikonfigurasi dan berjalan sepenuhnya pada lingkungan **Localhost**.
-Apabila aplikasi ini hendak diunggah ke layanan hosting (Production), diperlukan beberapa penyesuaian konfigurasi, antara lain:
-1.  **Koneksi Database**: File `backend/config.php` harus disesuaikan dengan kredensial database server hosting.
+Apabila aplikasi ini hendak diunggah ke layanan hosting (Production), diperlukan beberapa penyesuaian konfigurasi standar, antara lain:
+
+1.  **Koneksi Database**: File `backend/config.php` harus disesuaikan dengan kredensial database server hosting yang digunakan.
 2.  **Base URL**: Path absolut atau routing mungkin perlu disesuaikan dengan struktur folder di hosting.
-3.  **Permissions**: Folder `backend/uploads/` memerlukan izin tulis (write permission/chmod 777 atau 755) agar fitur upload bukti dapat berjalan.
+3.  **Konfigurasi PHP**: Pastikan server mengizinkan fungsi `file_uploads` dan ekstensi `pdo_mysql` & `gd` aktif.
 
 ---
 
@@ -21,16 +22,17 @@ Apabila aplikasi ini hendak diunggah ke layanan hosting (Production), diperlukan
 Sebagai pengembang, saya telah mengimplementasikan fitur-fitur berikut untuk mendukung fungsionalitas sistem:
 
 ### 1. Panel Pengguna (User)
-- **Pelaporan Insiden**: Pengguna dapat melaporkan insiden lengkap dengan Geo-tagging (Lokasi) dan kategori.
-- **Upload Bukti**: Mendukung unggah gambar sebagai bukti otentik insiden.
-- **Interaksi Real-time**: Fitur chat langsung dengan administrator untuk koordinasi penanganan tiket.
+- **Pelaporan Insiden**: Pengguna dapat melaporkan insiden lengkap dengan Geo-tagging (Lokasi) dan kategori spesifik.
+- **Upload Bukti**: Mendukung unggah gambar (JPG/PNG) sebagai bukti otentik insiden.
+- **Interaksi Real-time**: Fitur chat langsung dengan administrator untuk koordinasi penanganan tiket, mendukung lampiran file.
+- **Pelacakan Status**: Memantau perkembangan laporan dari status 'Open', 'In Progress', hingga 'Closed'.
 
 ### 2. Panel Administrator
-- **Dashboard Eksekutif**: Tampilan visual asimetris yang menyajikan statistik insiden (Open, In Progress, Closed).
-- **Manajemen Tiket**: Kemampuan untuk memfilter, memantau, dan memperbarui status laporan.
+- **Dashboard Eksekutif**: Tampilan visual asimetris yang menyajikan statistik insiden secara real-time.
+- **Manajemen Tiket**: Kemampuan penuh untuk memfilter, memantau, dan memperbarui status laporan.
 - **Fitur Ekspor PDF**:
-  - **Executive Summary**: Ringkasan statistik dan daftar insiden prioritas tinggi.
-  - **Detail Report**: Laporan mendalam per tiket termasuk riwayat diskusi (chat) dan lampiran.
+  - **Executive Summary**: Ringkasan statistik manajerial dan daftar insiden prioritas tinggi.
+  - **Detail Report**: Laporan mendalam per tiket termasuk riwayat diskusi (chat) dan lampiran visual.
 
 ## 🛠️ Teknologi Pengembangan
 Dalam pengembangan sistem ini, saya menggunakan teknologi berikut:
@@ -39,22 +41,49 @@ Dalam pengembangan sistem ini, saya menggunakan teknologi berikut:
 - **Database**: MariaDB / MySQL
 - **Dependencies**: FPDF, PHPMailer
 
-## 🚀 Panduan Instalasi (Lokal)
+---
 
-1. **Persiapan Database**
-   - Buat database baru dengan nama `reporting_system`.
-   - Import file `reporting_system_final.sql` yang telah saya sertakan.
+## 🔑 Kredensial Akses (Login)
+Berikut adalah akun yang telah disiapkan dalam database untuk keperluan demonstrasi dan pengujian:
 
-2. **Konfigurasi**
-   - Sesuaikan file `backend/config.php` dengan user/password database lokal Anda.
+### 1. Akun Administrator
+Memiliki akses penuh ke Dashboard, Manajemen Laporan, dan Chat Admin.
+- **Username**: `admin`
+- **Password**: `password` (atau `admin123`)
 
-3. **Menjalankan Server**
-   Gunakan PHP built-in server pada folder root proyek:
-   ```bash
-   php -S localhost:8000
-   ```
-   Akses aplikasi melalui: `http://localhost:8000/frontend/login.html`
+### 2. Akun Pengguna (User)
+Akses untuk membuat laporan baru dan berkomunikasi dengan admin.
+- **Username**: `testuser`
+- **Password**: `password`
+
+*> Catatan: Password tersimpan dalam database menggunakan hashing (Bcrypt). Jika login gagal, silakan reset password melalui database atau register akun baru.*
+
+---
+
+## 🚀 Panduan Instalasi
+
+### 1. Persiapan Database
+- Pastikan aplikasi XAMPP/WAMP atau layanan database MySQL sudah berjalan.
+- Buat database baru dengan nama `reporting_system`.
+- Import file `reporting_system_final.sql` yang disertakan dalam folder proyek ini.
+
+### 2. Konfigurasi Koneksi
+- Buka file `backend/config.php` menggunakan teks editor (VS Code / Notepad).
+- Sesuaikan pengaturan `$host`, `$dbname`, `$username`, dan `$password` dengan konfigurasi database lokal Anda.
+
+### 3. Menjalankan Server
+Anda dapat menjalankan aplikasi ini menggunakan PHP built-in server. Buka Command Prompt atau Terminal di dalam folder proyek, lalu ketik:
+
+```bash
+php -S localhost:8000
+```
+
+### 4. Akses Aplikasi
+Buka browser (Chrome/Edge/Firefox) dan kunjungi alamat berikut:
+`http://localhost:8000/frontend/login.html`
 
 ---
 **Disusun Oleh:**
+**Eustakius Satu Rajawali Ku**
+**NPM: 220711648**
 Mahasiswa Universitas Atma Jaya Yogyakarta

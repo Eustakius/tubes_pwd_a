@@ -88,4 +88,8 @@ Buka browser (Chrome/Edge/Firefox) dan kunjungi alamat berikut:
 **Disusun Oleh:**
 **Eustakius Satu Rajawali Ku**
 **NPM: 220711648**
+**Vaness Avril Madayanto**
+**NPM: 220711685**
+**NAMA**
+**NPM: **
 Mahasiswa Universitas Atma Jaya Yogyakarta

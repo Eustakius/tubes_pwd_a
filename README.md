@@ -50,13 +50,13 @@ Berikut adalah akun yang telah disiapkan dalam database (`reporting_system_final
 Memiliki akses penuh ke Dashboard, Manajemen Laporan, dan Chat Admin.
 - **Username**: `admin`
 - **Email**: `admin@cyberreport.com`
-- **Password**: `admin123`
+- **Password**: `123`
 
 ### 2. Akun Pengguna (User)
 Akses untuk membuat laporan baru dan berkomunikasi dengan admin.
 - **Username**: `testuser`
 - **Email**: `test@example.com`
-- **Password**: `user123`
+- **Password**: `123`
 
 *(Password yang tersimpan di database sudah di-hash. Gunakan password teks di atas saat login).*
 

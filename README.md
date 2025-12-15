@@ -44,7 +44,7 @@ Dalam pengembangan sistem ini, saya menggunakan teknologi berikut:
 ---
 
 ## 🔑 Kredensial Akses (Login)
-Berikut adalah akun yang sudah disiapkan dalam database (`reporting_system_final.sql`). Anda dapat langsung menggunakannya setelah import database.
+Berikut adalah akun yang telah disiapkan dalam database (`reporting_system_final.sql`). Anda dapat langsung menggunakannya setelah import database.
 
 ### 1. Akun Administrator
 Memiliki akses penuh ke Dashboard, Manajemen Laporan, dan Chat Admin.

@@ -44,19 +44,19 @@ Dalam pengembangan sistem ini, saya menggunakan teknologi berikut:
 ---
 
 ## 🔑 Kredensial Akses (Login)
-Berikut adalah akun yang telah disiapkan dalam database untuk keperluan demonstrasi dan pengujian:
+Berikut adalah akun yang sudah disiapkan dalam database (`reporting_system_final.sql`). Anda dapat langsung menggunakannya setelah import database.
 
 ### 1. Akun Administrator
 Memiliki akses penuh ke Dashboard, Manajemen Laporan, dan Chat Admin.
 - **Username**: `admin`
-- **Password**: `password` (atau `admin123`)
+- **Password**: `admin123`
 
 ### 2. Akun Pengguna (User)
 Akses untuk membuat laporan baru dan berkomunikasi dengan admin.
 - **Username**: `testuser`
-- **Password**: `password`
+- **Password**: `user123`
 
-*> Catatan: Password tersimpan dalam database menggunakan hashing (Bcrypt). Jika login gagal, silakan reset password melalui database atau register akun baru.*
+*(Password yang tersimpan di database sudah di-hash. Gunakan password teks di atas saat login).*
 
 ---
 

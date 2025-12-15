@@ -46,4 +46,6 @@ CREATE TABLE IF NOT EXISTS comments (
 
 -- Default Admin (Password: admin123)
 -- Hash: $2y$10$wK1k... (This is just an example, ensure you have a valid hash)
--- INSERT INTO users (username, email, password, role) VALUES ('admin', 'admin@example.com', '$2y$10$YourHashHere', 'admin');
+-- INSERT INTO `users` VALUES
+-- (1,'admin','admin@cyberreport.com','$2y$10$.BwKwIJDpA6.tL.Wz/E.AO.g/E.AO.g/E.AO.g/E.AO.g/E.AO.',1,'user_1_1764308342.jpg','2025-11-28 04:31:58','admin'),
+-- (2,'testuser','test@example.com','$2y$10$.BwKwIJDpA6.tL.Wz/E.AO.g/E.AO.g/E.AO.g/E.AO.g/E.AO.',1,'default.jpg','2025-11-28 04:31:58','user');

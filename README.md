@@ -90,6 +90,6 @@ Buka browser (Chrome/Edge/Firefox) dan kunjungi alamat berikut:
 **NPM: 220711648** ||
 **Vaness Avril Madayanto**
 **NPM: 220711685** ||
-**NAMA**
-**NPM: **
+**Minerva Benedicto Gahansa**
+**NPM: 240713032**
 Mahasiswa Universitas Atma Jaya Yogyakarta

@@ -92,4 +92,6 @@ Buka browser (Chrome/Edge/Firefox) dan kunjungi alamat berikut:
 **NPM: 220711685** ||
 **Minerva Benedicto Gahansa**
 **NPM: 240713032**
+**Claire Carla Soumokil**
+**NPM: 210711148**
 Mahasiswa Universitas Atma Jaya Yogyakarta

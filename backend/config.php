@@ -1,10 +1,10 @@
 <?php
 session_start();
 
-// === KONFIGURASI DATABASE ===
+// === Konfigurasi Koneksi Database (PDO Environment) ===
 define('DB_HOST', 'localhost');
-define('DB_USER', 'admin');
-define('DB_PASS', '123');  // XAMPP default
+define('DB_USER', 'root');
+define('DB_PASS', '');  // Kredensial Default XAMPP (Development)
 define('DB_NAME', 'reporting_system');
 
 try {
@@ -14,7 +14,7 @@ try {
     die("Koneksi gagal: " . $e->getMessage());
 }
 
-// === PHPMailer (folder: backend/PHPMailer) ===
+// === Integrasi Pustaka PHPMailer untuk Layanan Email ===
 require __DIR__ . '/PHPMailer/Exception.php';
 require __DIR__ . '/PHPMailer/PHPMailer.php';
 require __DIR__ . '/PHPMailer/SMTP.php';
@@ -23,13 +23,13 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
 
-// === EMAIL AKTIVASI ===
+// === Modul Pengiriman Email Aktivasi Akun (SMTP) ===
 function sendActivationEmail($email, $username, $token)
 {
     $mail = new PHPMailer(true);
 
     try {
-        // Debug ke php_error_log
+        // Mencatat output debug ke log error PHP (Debugging)
         $mail->SMTPDebug = SMTP::DEBUG_SERVER;
         $mail->Debugoutput = 'error_log';
 
@@ -64,7 +64,7 @@ function sendActivationEmail($email, $username, $token)
     }
 }
 
-// === UTIL ===
+// === Kumpulan Fungsi Utilitas (Helper Functions) ===
 function hash_password($password)
 {
     return password_hash($password, PASSWORD_DEFAULT);
@@ -80,5 +80,5 @@ function generate_token()
     return bin2hex(random_bytes(32));
 }
 
-// Response default JSON untuk semua endpoint backend
+// Mengatur header respons standar JSON untuk semua endpoint API
 header('Content-Type: application/json');

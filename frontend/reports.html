@@ -137,7 +137,7 @@
       <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
         <div id="chatContainer" class="chat-container"
           style="flex: 1; overflow-y: auto; padding-right: 0.5rem; margin-bottom: 1rem;">
-          <!-- Comments go here -->
+          <!-- Komentar chat akan muncul di sini (Dynamic Content) -->
         </div>
 
         <form id="commentForm" style="display: flex; gap: 0.5rem; margin-top: auto; flex-wrap: wrap;">
@@ -175,7 +175,7 @@
       alertBox.classList.remove('d-none');
     }
 
-    // check auth then load
+    // Verifikasi autentikasi sesi sebelum memuat halaman (Security Check)
     fetch(`${API_BASE}/me.php`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
@@ -184,7 +184,7 @@
         } else if (d.data.role === 'admin') {
           window.location.href = 'admin.html';
         } else {
-          currentUser = d.data; // Store current user for chat styling
+          currentUser = d.data; // Menyimpan data user saat ini untuk styling chat (Client-side Session)
           loadReports();
         }
       });
@@ -245,7 +245,7 @@
 
     function getChatButton(rep) {
       let badge = '';
-      // If last reply was by admin, User needs to see it
+      // Notifikasi: Jika balasan terakhir adalah admin, tampilkan indikator
       if (rep.last_reply_by === 'admin') {
         badge = `<span style="position:absolute; top:-5px; right:-5px; width:10px; height:10px; background:red; border-radius:50%; border:2px solid white;"></span>`;
       }
@@ -253,13 +253,13 @@
     }
 
     function getPriorityBadge(p) {
-      if (p === 'Critical') return 'badge-danger'; // We'll need to define this style or reuse danger
+      if (p === 'Critical') return 'badge-danger'; // Perlu mendefinisikan style ini atau menggunakan ulang 'danger'
       if (p === 'High') return 'badge-warning';
       if (p === 'Medium') return 'badge-info';
       return 'badge-secondary'; // Low
     }
 
-    // --- Modal & Comment Logic ---
+    // --- Logika Modal dan Komentar (UI Interactivity) ---
     const discussModal = document.getElementById('discussModal');
     const chatContainer = document.getElementById('chatContainer');
     const commentInput = document.getElementById('commentInput');
@@ -293,11 +293,11 @@
       chatContainer.innerHTML = '<div class="text-center text-muted">Loading...</div>';
       loadComments(reportId);
 
-      // Real-time Polling (Every 3s)
+      // Polling Real-time (Interval 3 detik)
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = setInterval(() => {
         if (discussModal.classList.contains('active')) {
-          loadComments(reportId, true); // true = silent assignment
+          loadComments(reportId, true); // Mode senyap (Background Update)
         }
       }, 3000);
     }
@@ -341,16 +341,15 @@
         .then(r => r.json())
         .then(d => {
           if (d.success && d.data) {
-            // Basic implementation: Re-render all. 
-            // To be smoother, we could diff, but for now just replacing innerHTML is okay 
-            // IF we assume 3s polling isn't too annoying. 
-            // BUT user wants real-time feel. 
-            // Since we append instantly on Send, polling only adds OTHERS' messages.
+            // Implementasi Dasar: Render ulang semua elemen.
+            // Untuk kehalusan, bisa menggunakan diffing, namun saat ini replace innerHTML sudah cukup.
+            // User menginginkan pengalaman real-time.
+            // Karena kita append instan saat kirim, polling hanya menambahkan pesan ORANG LAIN.
 
-            // Simplest "Smooth" way: compare length? 
-            // Let's just render all string and replace.
-            // If we are typing, replacing innerHTML might lose scroll position slightly? 
-            // We'll reset scrollTop ONLY if it was at bottom?
+            // Cara paling sederhana dan halus: bandingkan panjang data?
+            // Render ulang seluruh string HTML.
+            // Jika sedang mengetik, replace innerHTML mungkin mengganggu posisi scroll?
+            // Reset scrollTop HANYA jika sebelumnya berada di bawah.
 
             const wasAtBottom = (chatContainer.scrollHeight - chatContainer.scrollTop === chatContainer.clientHeight);
 
@@ -411,7 +410,7 @@
       progressContainer.classList.remove('d-none');
       progressBar.style.width = '0%';
 
-      // Use XHR for Progress
+      // Menggunakan XHR untuk Progress Bar Upload
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `${API_BASE}/crud_comments.php`, true);
       xhr.withCredentials = true;
@@ -436,7 +435,7 @@
               fileInput.value = '';
 
               // INSTANT UI UPDATE
-              // If backend returned the 'comment' object, use it!
+              // Jika backend mengembalikan objek 'comment', gunakan itu!
               if (d.comment) {
                 const html = renderComment(d.comment);
                 // Check if "No comments" placeholder exists and remove it
@@ -446,7 +445,7 @@
                 chatContainer.innerHTML += html;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
               } else {
-                // Fallback if backend didn't return comment (it should now)
+                // Fallback jika backend tidak mengembalikan status (seharusnya sekarang sudah)
                 loadComments(rid);
               }
 
@@ -472,12 +471,12 @@
       xhr.send(formData);
     });
 
-    // Close modal on outside click
+    // Menutup modal saat klik area luar (Event Listener)
     discussModal.addEventListener('click', (e) => {
       if (e.target === discussModal) closeModal();
     });
 
-    // create/update
+    // Menangani Pembuatan/Pembaruan Laporan
     document.getElementById('reportForm').addEventListener('submit', function (e) {
       e.preventDefault();
 
@@ -503,8 +502,8 @@
 
       const isUpdate = !!id;
 
-      // ALWAYS use POST because crud_reports.php handles both Create/Update via POST (checks ?id)
-      // and standard PHP doesn't parse PUT body automatically.
+      // SELALU gunakan POST karena crud_reports.php menangani Create/Update via POST (cek query ?id)
+      // dan PHP standar tidak memparsing body PUT secara otomatis.
       const finalMethod = 'POST';
 
       // UI Reset
@@ -557,7 +556,7 @@
         showAlert('Network Error', 'danger');
       };
 
-      // Construct Payload (FormData)
+      // Membangun Payload Data (FormData)
       const formData = new FormData();
       formData.append('title', title);
       formData.append('description', document.getElementById('description').value.trim());
@@ -612,7 +611,7 @@
       );
     });
 
-    // Define editReport globally
+    // Mendefinisikan fungsi editReport secara global
     window.editReport = function (id) {
       document.getElementById('reportForm').reset();
 
@@ -639,14 +638,14 @@
         .catch(err => console.error(err));
     };
 
-    // Cancel Edit
+    // Batalkan Edit (Reset Form)
     document.getElementById('btnCancelEdit').addEventListener('click', function () {
       document.getElementById('reportForm').reset();
       document.getElementById('reportId').value = '';
       this.classList.add('d-none');
     });
 
-    // Delete Report
+    // Hapus Laporan
     window.deleteReport = function (id) {
       if (!confirm('Delete this report?')) return;
       fetch(`${API_BASE}/crud_reports.php?id=${id}`, {
@@ -664,7 +663,7 @@
         });
     };
 
-    // Logout
+    // Proses Logout (Session Destruction)
     document.getElementById('btnLogout').addEventListener('click', () => {
       fetch(`${API_BASE}/logout.php`, { credentials: 'include' })
         .then(() => window.location.href = 'login.html');

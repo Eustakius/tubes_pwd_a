@@ -9,9 +9,9 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
 
 try {
     $stmt = $pdo->query("SELECT status, COUNT(*) as count FROM reports GROUP BY status");
-    $stats = $stmt->fetchAll(PDO::FETCH_KEY_PAIR); // returns ['open' => 5, 'closed' => 2]
-
-    // Ensure all keys exist
+    $stats = $stmt->fetchAll(PDO::FETCH_KEY_PAIR); // Menghasilkan array asosiatif ['open' => 5, 'closed' => 2]
+    
+    // Memastikan seluruh kunci status tersedia (Normalisasi Data)
     $data = [
         'open' => $stats['open'] ?? 0,
         'progress' => $stats['progress'] ?? 0,

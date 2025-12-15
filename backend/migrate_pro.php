@@ -2,7 +2,7 @@
 require 'config.php';
 
 try {
-    // Add category column
+    // Menambahkan kolom 'category' ke tabel reports
     $pdo->exec("ALTER TABLE reports ADD COLUMN category VARCHAR(50) DEFAULT 'Other'");
     echo "Column 'category' added.\n";
 } catch (PDOException $e) {
@@ -10,7 +10,7 @@ try {
 }
 
 try {
-    // Add priority column
+    // Menambahkan kolom 'priority' dengan tipe data ENUM
     $pdo->exec("ALTER TABLE reports ADD COLUMN priority ENUM('Low', 'Medium', 'High', 'Critical') DEFAULT 'Low'");
     echo "Column 'priority' added.\n";
 } catch (PDOException $e) {

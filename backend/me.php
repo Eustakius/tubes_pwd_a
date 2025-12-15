@@ -13,7 +13,7 @@ echo json_encode([
         'id' => $_SESSION['user_id'],
         'username' => $_SESSION['username'],
         'email' => $_SESSION['user_email'],
-        'role' => $_SESSION['role'] ?? 'user', // Default to user if not set
+        'role' => $_SESSION['role'] ?? 'user', // Default peran 'user' jika tidak diset
         'profile_pic' => $_SESSION['profile_pic'] ?? 'default.jpg'
     ]
 ]);

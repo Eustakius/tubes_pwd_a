@@ -1,7 +1,7 @@
 <?php
 require_once 'config.php';
 
-// Prevent unwanted output
+// Mencegah output yang tidak diinginkan (Konfigurasi Error Reporting)
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 ini_set('display_errors', 0);
 
@@ -19,7 +19,7 @@ $userId = $_SESSION['user_id'];
 
 switch ($method) {
     case 'POST':
-        // Handle both JSON and Multipart/Form-Data
+        // Menangani input JSON dan Multipart/Form-Data untuk fleksibilitas request
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (stripos($contentType, 'application/json') !== false) {
             $input = json_decode(file_get_contents('php://input'), true);
@@ -40,13 +40,13 @@ switch ($method) {
             $priority = trim($_POST['priority'] ?? 'Low');   // Added
         }
 
-        if (empty($title) || empty($description)) { // Modified validation
+        if (empty($title) || empty($description)) { // Validasi Data Input (Pastikan semua field wajib terisi)
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Judul dan Deskripsi wajib diisi']);
             exit;
         }
 
-        // Handle Evidence Upload
+        // Memproses unggah bukti laporan (File Upload Handling)
         $evidencePath = null;
         if (isset($_FILES['evidence']) && $_FILES['evidence']['error'] === UPLOAD_ERR_OK) {
             $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
@@ -64,7 +64,7 @@ switch ($method) {
                 if (move_uploaded_file($_FILES['evidence']['tmp_name'], $targetDir . $filename)) {
                     $evidencePath = $filename;
                 }
-            } else { // Added invalid file type check
+            } else { // Pemeriksaan validitas tipe file (Security Check)
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Invalid file type. Only Images/PDF allowed.']);
                 exit;
@@ -140,7 +140,7 @@ switch ($method) {
             exit;
         }
 
-        // Check permission: Owner OR Admin
+        // Memeriksa hak akses: Pemilik Laporan atau Administrator (Access Control)
         $role = $_SESSION['role'] ?? 'user';
         if ($role !== 'admin' && $report['user_id'] != $userId) {
             http_response_code(403);
@@ -148,7 +148,7 @@ switch ($method) {
             exit;
         }
 
-        // QoL: User cannot edit if closed
+        // Aturan Bisnis: Pengguna tidak dapat mengedit tiket yang sudah ditutup (Quality of Life)
         if ($role !== 'admin' && $report['status'] === 'closed') {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Cannot edit a closed ticket']);
@@ -158,12 +158,12 @@ switch ($method) {
         $newTitle = $title !== '' ? $title : $report['title'];
         $newDescription = $description !== '' ? $description : $report['description'];
         $newStatus = $status !== '' ? $status : $report['status'];
-        // Assume category/priority might be passed in PUT body
+        // Asumsi: Kategori dan Prioritas mungkin disertakan dalam body PUT (Payload)
         $newCategory = $input['category'] ?? $report['category'];
         $newPriority = $input['priority'] ?? $report['priority'];
 
         try {
-            // If admin, they can update any report. If user, only theirs.
+            // Jika admin, mereka bisa mengupdate semua laporan. Jika user, hanya milik mereka.
             if ($role === 'admin') {
                 $stmt = $pdo->prepare(
                     "UPDATE reports SET title = ?, description = ?, status = ?, category = ?, priority = ? WHERE id = ?"
@@ -202,7 +202,7 @@ switch ($method) {
             exit;
         }
 
-        // Check permission & Status
+        // Verifikasi Hak Akses dan Status Tiket sebelum penghapusan
         $role = $_SESSION['role'] ?? 'user';
         if ($role !== 'admin') {
             if ($report['user_id'] != $userId) {

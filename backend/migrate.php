@@ -2,7 +2,7 @@
 require 'config.php';
 
 try {
-    // 1. Add evidence column to reports if not exists
+    // 1. Menambahkan kolom 'evidence' ke tabel 'reports' jika belum ada (Schema Alteration)
     $checkCol = $pdo->query("SHOW COLUMNS FROM reports LIKE 'evidence'");
     if ($checkCol->rowCount() == 0) {
         $pdo->exec("ALTER TABLE reports ADD COLUMN evidence VARCHAR(255) DEFAULT NULL");
@@ -11,7 +11,7 @@ try {
         echo "'evidence' column already exists.\n";
     }
 
-    // 2. Create comments table
+    // 2. Membuat tabel 'comments' untuk fitur diskusi (Table Creation)
     $sql = "CREATE TABLE IF NOT EXISTS comments (
         id INT AUTO_INCREMENT PRIMARY KEY,
         report_id INT NOT NULL,

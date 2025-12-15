@@ -2,7 +2,7 @@
 require 'config.php';
 
 try {
-    // Add last_reply_by column
+    // Menambahkan kolom 'last_reply_by' untuk pelacakan notifikasi
     $pdo->exec("ALTER TABLE reports ADD COLUMN last_reply_by ENUM('user', 'admin') DEFAULT NULL");
     echo "Column 'last_reply_by' added.\n";
 } catch (PDOException $e) {

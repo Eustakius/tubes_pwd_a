@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Check if Admin
+// Verifikasi Hak Akses Administrator
 $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
@@ -37,9 +37,9 @@ try {
     $stmt = $pdo->prepare("UPDATE reports SET status = ? WHERE id = ?");
     $stmt->execute([$data['status'], $data['id']]);
 
-    // Add a system comment? Optional but good for audit.
+    // Menambahkan komentar sistem? Opsional tetapi baik untuk audit trail.
     // $stmt = $pdo->prepare("INSERT INTO comments (report_id, user_id, message) VALUES (?, ?, ?)");
-    // $stmt->execute([$data['id'], $_SESSION['user_id'], "Status updated to " . $data['status']]);
+    // $stmt->execute([$data['id'], $_SESSION['user_id'], "Status diubah menjadi " . $data['status']]);
 
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {

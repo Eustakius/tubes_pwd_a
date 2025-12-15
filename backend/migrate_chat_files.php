@@ -2,7 +2,7 @@
 require 'config.php';
 
 try {
-    // Add attachment column to comments
+    // Menambahkan kolom 'attachment' pada tabel 'comments'
     $pdo->exec("ALTER TABLE comments ADD COLUMN attachment VARCHAR(255) DEFAULT NULL");
     echo "Column 'attachment' added to comments.\n";
 } catch (PDOException $e) {

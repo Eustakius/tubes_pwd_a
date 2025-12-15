@@ -3,14 +3,14 @@ require 'config.php';
 require 'fpdf.php';
 
 if (!isset($_GET['id'])) {
-    die("Report ID required");
+    die("ID Laporan Wajib Disertakan");
 }
 
 $id = (int) $_GET['id'];
 $userId = $_SESSION['user_id'] ?? 0;
 $role = $_SESSION['role'] ?? 'user';
 
-// Fetch Report
+// Mengambil Data Laporan dari Database
 $stmt = $pdo->prepare("SELECT r.*, u.username, u.email FROM reports r JOIN users u ON r.user_id = u.id WHERE r.id = ?");
 $stmt->execute([$id]);
 $report = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -19,12 +19,12 @@ if (!$report) {
     die("Report not found");
 }
 
-// Permission Check
+// Pemeriksaan Hak Akses (Access Control)
 if ($role !== 'admin' && $report['user_id'] != $userId) {
     die("Unauthorized");
 }
 
-// Fetch Comments
+// Mengambil Riwayat Komentar/Diskusi
 $stmt = $pdo->prepare("SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.id WHERE c.report_id = ? ORDER BY c.created_at ASC");
 $stmt->execute([$id]);
 $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -53,7 +53,7 @@ $pdf = new PDF();
 $pdf->AddPage();
 $pdf->SetFont('Arial', '', 12);
 
-// --- Report Details ---
+// --- Detail Informasi Laporan ---
 $pdf->SetFillColor(240, 240, 240);
 $pdf->SetFont('Arial', 'B', 14);
 $pdf->Cell(0, 10, 'Case #' . $report['id'] . ': ' . $report['title'], 0, 1, 'L', true);
@@ -96,20 +96,20 @@ $pdf->SetFont('Arial', '', 10);
 $pdf->MultiCell(0, 6, $report['description']);
 $pdf->Ln(5);
 
-// --- Evidence Section ---
+// --- Bagian Bukti Lampiran ---
 if ($report['evidence']) {
     $pdf->SetFont('Arial', 'B', 11);
     $pdf->Cell(0, 8, 'Evidence Attached:', 0, 1);
     $pdf->SetFont('Arial', '', 10);
     $pdf->Cell(0, 6, 'Filename: ' . $report['evidence'], 0, 1);
 
-    // Attempt to show image if it's an image
+    // Percobaan menampilkan gambar jika format valid
     $ext = strtolower(pathinfo($report['evidence'], PATHINFO_EXTENSION));
     if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
         $imgPath = __DIR__ . '/uploads/' . $report['evidence'];
         if (file_exists($imgPath)) {
             $pdf->Ln(2);
-            // Limit width to 100
+            // Batasi lebar gambar maksimum 100 unit
             $pdf->Image($imgPath, null, null, 100);
             $pdf->Ln(5);
         }
@@ -118,7 +118,7 @@ if ($report['evidence']) {
     }
 }
 
-// --- Chat Legend/Transcript ---
+// --- Transkrip Diskusi / Legenda Chat ---
 $pdf->Ln(10);
 $pdf->SetDrawColor(0, 0, 0);
 $pdf->SetFillColor(50, 50, 50);
@@ -137,7 +137,7 @@ if (empty($comments)) {
         $user = $c['username'];
         $msg = $c['message'];
 
-        // Box for each comment
+        // Kotak kontainer untuk setiap komentar
         $pdf->SetFont('Arial', 'B', 9);
         $pdf->SetFillColor(245, 245, 245);
         $pdf->Cell(0, 6, "$user ($date)", 0, 1, 'L', true);

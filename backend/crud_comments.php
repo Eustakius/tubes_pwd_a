@@ -12,15 +12,15 @@ $userId = $_SESSION['user_id'];
 $role = $_SESSION['role'] ?? 'user';
 
 if ($method === 'GET') {
-    // Get comments for a report
+    // Mengambil daftar komentar terkait laporan tertentu (Fetch Data)
     $reportId = isset($_GET['report_id']) ? (int) $_GET['report_id'] : 0;
 
-    // Check permission: User must own report OR be admin
-    // For simplicity efficiently: Admin can see all, User can see if they are owner.
-    // We'll trust the report owning check to a joined query or pre-check.
+    // Memvalidasi hak akses: Pengguna wajib pemilik laporan atau Administrator
+    // Implementasi efisiensi: Admin memiliki akses global, User terbatas pada kepemilikan.
+    // Kami mempercayakan pemeriksaan kepemilikan laporan pada query gabungan atau pra-pemeriksaan.
 
-    // Simplest: Just fetch. If empty return [].
-    // ideally check ownership.
+    // Mekanisme sederhana: Cukup ambil data. Jika kosong kembalikan [].
+    // Idealnya memeriksa kepemilikan terlebih dahulu.
     $stmt = $pdo->prepare("SELECT user_id FROM reports WHERE id = ?");
     $stmt->execute([$reportId]);
     $report = $stmt->fetch();
@@ -49,14 +49,14 @@ if ($method === 'GET') {
     echo json_encode(['success' => true, 'data' => $comments, 'current_user_id' => $userId]);
 
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Handle both JSON (legacy) and Multipart (new)
-    // Actually, it's safer to just rely on POST for the new feature or check content type.
-    // But since we are upgrading the frontend, we can just switch to $_POST.
+    // Menangani permintaan format JSON (Legacy) maupun Multipart-form (Modern)
+    // Sebenarnya, lebih aman hanya mengandalkan POST untuk fitur baru atau memeriksa tipe konten.
+    // Namun karena kami sedang meningkatkan frontend, kami cukup beralih ke $_POST.
 
     $reportId = $_POST['report_id'] ?? null;
     $message = $_POST['message'] ?? '';
 
-    // Fallback for JSON requests if any legacy clients (optional, but good practice)
+    // Fallback untuk permintaan JSON jika ada klien legacy (opsional, namun praktik yang baik)
     if (!$reportId) {
         $input = json_decode(file_get_contents('php://input'), true);
         if ($input) {
@@ -76,7 +76,7 @@ if ($method === 'GET') {
         exit;
     }
 
-    // Verify ownership/permission (same logic)
+    // Verifikasi ulang hak akses dan kepemilikan laporan (Validasi Keamanan)
     $stmt = $pdo->prepare("SELECT user_id, status FROM reports WHERE id = ?");
     $stmt->execute([$reportId]);
     $report = $stmt->fetch();
@@ -88,21 +88,21 @@ if ($method === 'GET') {
     }
 
     $role = $_SESSION['role'] ?? 'user';
-    // Logic: Admin can reply to anyone. User can only reply to own.
+    // Logika: Admin dapat membalas siapa saja. User hanya dapat membalas milik sendiri.
     if ($role !== 'admin' && $report['user_id'] != $userId) {
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Forbidden']);
         exit;
     }
 
-    // Check status
+    // Memeriksa status laporan
     if ($report['status'] === 'closed' && $role !== 'admin') {
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Ticket is closed']);
         exit;
     }
 
-    // Handle Attachment
+    // Menangani proses unggah lampiran file (File Handling)
     $attachment = null;
     if (!empty($_FILES['attachment']['name'])) {
         $fileError = $_FILES['attachment']['error'];
@@ -129,7 +129,7 @@ if ($method === 'GET') {
                 exit;
             }
         } else {
-            // Map PHP error codes to messages
+            // Memetakan kode error PHP ke pesan yang dapat dibaca manusia
             $msg = 'Upload failed';
             switch ($fileError) {
                 case UPLOAD_ERR_INI_SIZE:
@@ -148,7 +148,7 @@ if ($method === 'GET') {
                     $msg = 'Unknown upload error code: ' . $fileError;
                     break;
             }
-            // If it's just "No file", we ignore (it's optional). But if name was set and we are here, it's an error.
+            // Jika hanya "No file", kami abaikan (ini opsional). Namun jika nama disetel dan kami di sini, itu error.
             if ($fileError !== UPLOAD_ERR_NO_FILE) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => $msg]);
@@ -157,7 +157,7 @@ if ($method === 'GET') {
         }
     }
 
-    // Check if empty (no message and no attachment)
+    // Memeriksa apakah kosong (tidak ada pesan dan tidak ada lampiran)
     if (empty($message) && !$attachment) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Message or Attachment required']);
@@ -167,33 +167,33 @@ if ($method === 'GET') {
     $stmt = $pdo->prepare("INSERT INTO comments (report_id, user_id, message, attachment) VALUES (?, ?, ?, ?)");
     if ($stmt->execute([$reportId, $userId, $message, $attachment])) {
 
-        // 1. Update last_reply_by
+        // 1. Memperbarui status 'last_reply_by' pada laporan terkait
         $newReplyBy = ($role === 'admin') ? 'admin' : 'user';
         $stmt = $pdo->prepare("UPDATE reports SET last_reply_by = ? WHERE id = ?");
         $stmt->execute([$newReplyBy, $reportId]);
 
-        // 2. Send Email Notification
-        // Determine recipient
+        // 2. Mengirimkan notifikasi email (Email Notification System)
+        // Menentukan penerima
         $recipientEmail = '';
         $subject = "New Reply on Ticket #$reportId";
         $body = "There is a new reply on your ticket: \n\n" . $message . "\n\nLog in to view details.";
 
         if ($role === 'admin') {
-            // Admin replied -> Notify User
-            // We already fetched report above, but didn't select email. 
-            // In crud_comments GET, we join users, but here we only fetched report.
-            // Let's re-fetch owner email
+            // Admin membalas -> Beritahu User
+            // Kami sudah mengambil laporan di atas, tetapi tidak memilih email.
+            // Di crud_comments GET, kami menggabungkan users, tetapi di sini kami hanya mengambil laporan.
+            // Mari kita ambil ulang email pemilik.
             $stmt = $pdo->prepare("SELECT email FROM users WHERE id = ?");
             $stmt->execute([$report['user_id']]);
             $owner = $stmt->fetch();
             if ($owner)
                 $recipientEmail = $owner['email'];
         } else {
-            // User replied -> Notify Admin
-            // In a real app, you'd have a specific admin email or a list. 
-            // We'll just define a system admin email or leave blank if not simple.
-            // Let's assume a hardcoded admin for demo, or loop all admins.
-            // For safety/spam avoidance in demo, maybe just skip or use a strict one.
+            // User membalas -> Beritahu Admin
+            // Dalam aplikasi nyata, Anda akan memiliki email admin khusus atau daftar.
+            // Kami hanya akan mendefinisikan email admin sistem atau biarkan kosong jika tidak sederhana.
+            // Mari kita asumsikan admin hardcoded untuk demo, atau loop semua admin.
+            // Untuk keamanan/penghindaran spam dalam demo, mungkin lewati saja atau gunakan yang ketat.
             $recipientEmail = 'admin@example.com'; // Placeholder
         }
 
@@ -204,9 +204,9 @@ if ($method === 'GET') {
             }
         }
 
-        // Return the actual inserted data for real-time UI
+        // Mengembalikan data yang baru disisipkan untuk pembaruan UI secara Real-time
         $newId = $pdo->lastInsertId();
-        // Fetch the inserted row to be precise
+        // Mengambil baris yang disisipkan agar presisi
         $stmt = $pdo->prepare("SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?");
         $stmt->execute([$newId]);
         $newComment = $stmt->fetch(PDO::FETCH_ASSOC);

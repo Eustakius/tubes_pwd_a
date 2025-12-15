@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Check role
+// Memvalidasi peran pengguna (Role-Based Access Control)
 $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
@@ -18,7 +18,7 @@ if (!$user || $user['role'] !== 'admin') {
     exit;
 }
 
-// Fetch all reports with user info
+// Mengambil seluruh data laporan beserta informasi pelapor
 $status = isset($_GET['status']) ? $_GET['status'] : 'all';
 
 if ($status === 'all') {

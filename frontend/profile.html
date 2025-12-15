@@ -9,7 +9,7 @@
 
 <body>
 
-  <!-- Navbar -->
+  <!-- Navigasi Global -->
   <nav class="navbar">
     <div class="container d-flex align-center justify-between">
       <span class="nav-brand">Cyber Incident Reporting RMS</span>
@@ -25,7 +25,7 @@
     <div id="alert" class="alert d-none" role="alert"></div>
 
     <div class="grid-layout">
-      <!-- Left Column: Photo -->
+      <!-- Kolom Kiri: Foto Profil -->
       <div>
         <div class="card text-center">
           <h3 class="mb-4" style="font-size: 1.25rem;">Profile Photo</h3>
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <!-- Right Column: Details -->
+      <!-- Kolom Kanan: Detail Akun -->
       <div>
         <div class="card">
           <h3 class="mb-4" style="font-size: 1.25rem;">Account Details</h3>
@@ -79,7 +79,7 @@
       alertBox.classList.remove('d-none');
     }
 
-    // load profile
+    // Memuat data profil dari endpoint backend
     fetch(`${API_BASE}/profile.php`, { credentials: 'include' })
       .then(r => {
         if (r.status === 401) {
@@ -96,7 +96,7 @@
         document.getElementById('profileImg').src = `../assets/profile/${img}`;
       });
 
-    // update profile
+    // Memperbarui informasi profil pengguna
     document.getElementById('profileForm').addEventListener('submit', function (e) {
       e.preventDefault();
 
@@ -118,7 +118,7 @@
         });
     });
 
-    // update photo
+    // Memperbarui foto profil pengguna (Upload AJAX)
     document.getElementById('photoForm').addEventListener('submit', function (e) {
       e.preventDefault();
 

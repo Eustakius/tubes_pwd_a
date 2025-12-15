@@ -2,7 +2,7 @@
 require_once 'config.php';
 
 // Untuk sementara token hanya dicek keberadaannya di URL.
-// Di tahap lanjutan bisa disimpan di DB.
+// Di tahap lanjutan sebaiknya divalidasi dengan basis data.
 $token = $_GET['token'] ?? '';
 
 if (empty($token)) {
@@ -15,13 +15,13 @@ if (empty($token)) {
 }
 
 /**
- * Skenario simpel:
- * - Di email, token dipakai hanya sebagai dummy
- * - Aktivasi dilakukan manual oleh admin di database
+ * Skenario Sederhana (Prototype):
+ * - Di email, token digunakan hanya sebagai dummy verifikasi
+ * - Aktivasi dilakukan secara manual oleh admin di database
  * 
- * Untuk memenuhi soal UAS, kita buat versi berikut:
- * - User yang klik link dianggap valid → set active = 1 berdasarkan email di query string
- *   (nanti frontend generate link `...?email=...`)
+ * Untuk memenuhi kebutuhan Ujian Akhir Semester (UAS), skenario disesuaikan:
+ * - Pengguna yang menekan tautan dianggap valid -> set active = 1 berdasarkan email di query string
+ *   (frontend akan menghasilkan tautan dengan format `...?email=...`)
  */
 
 $email = $_GET['email'] ?? '';
@@ -35,7 +35,7 @@ if (empty($email)) {
     exit;
 }
 
-// Update active=1
+// Memperbarui status akun menjadi aktif (active=1)
 $stmt = $pdo->prepare("UPDATE users SET active = 1 WHERE email = ?");
 if ($stmt->execute([$email]) && $stmt->rowCount() > 0) {
     echo json_encode([
